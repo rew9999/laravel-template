@@ -1,0 +1,20 @@
+FROM php:8.2-fpm-bullseye
+
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_HOME=/composer
+
+COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
+
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends curl git unzip libzip-dev libicu-dev libonig-dev && \
+    curl -sL https://deb.nodesource.com/setup_20.x | bash - &&\
+    apt-get install -y nodejs &&\
+    pecl install redis&&\
+    docker-php-ext-enable redis&&\
+    docker-php-ext-install intl pdo_mysql zip bcmath&&\
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* 
+
+COPY ./php.ini /usr/local/etc/php/php.ini
+
+WORKDIR /var/www/html

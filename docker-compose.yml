@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Nginx サービス
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8000:80" # ホストの8000番ポートをコンテナの80番に
+    volumes:
+      - ./src:/var/www/html # Laravelのソースコードをマウント
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php
+      - db
+    networks:
+      - laravel-network
+
+  # PHP-FPM サービス
+  php:
+    build:
+      context: ./docker/php # docker/php/Dockerfile を使ってビルド
+    volumes:
+      - ./src:/var/www/html # ソースコードをマウント
+    networks:
+      - laravel-network
+
+  # MySQL サービス
+  db:
+    image: mysql:8.0
+    container_name: laravel-mysql
+    ports:
+      - "33060:3306" # ホストの33060番ポートをコンテナの3306番に
+    environment:
+      MYSQL_DATABASE: laravel_db
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - mysql-data:/var/lib/mysql # データを永続化
+    networks:
+      - laravel-network
+
+networks:
+  laravel-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
